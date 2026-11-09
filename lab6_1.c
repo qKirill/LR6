@@ -2,8 +2,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 #define ROOT "lab6_3"
+#define PATH_LEN 1024
 
 static int make_dir(const char *path)
 {
@@ -65,12 +67,42 @@ static int create_structure(void)
     return 0;
 }
 
+static void print_tree(const char *path, int depth)
+{
+    DIR *dir = opendir(path);
+    struct dirent *entry;
+
+    if (dir == NULL) {
+        perror(path);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        char full[PATH_LEN];
+        struct stat st;
+
+        if (entry->d_name[0] == '.') {
+            continue;
+        }
+
+        snprintf(full, sizeof(full), "%s/%s", path, entry->d_name);
+        printf("%*s%s\n", depth * 4, "", entry->d_name);
+
+        if (stat(full, &st) == 0 && S_ISDIR(st.st_mode)) {
+            print_tree(full, depth + 1);
+        }
+    }
+
+    closedir(dir);
+}
+
 int main(void)
 {
     if (create_structure() == -1) {
         return 1;
     }
 
-    printf("Structure %s created\n", ROOT);
+    printf("%s\n", ROOT);
+    print_tree(ROOT, 1);
     return 0;
 }
