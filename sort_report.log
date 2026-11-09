@@ -1,0 +1,12 @@
+--- Програма сортування запущена ---
+Створено папку: ./lab6_task_2_structured/Documents
+Переміщено: ./lab6_3/docs/manual.txt -> ./lab6_task_2_structured/Documents/manual.txt
+Створено папку: ./lab6_task_2_structured/PDFs
+Переміщено: ./lab6_3/docs/presentation.pdf -> ./lab6_task_2_structured/PDFs/presentation.pdf
+Створено папку: ./lab6_task_2_structured/Images
+Переміщено: ./lab6_3/img/cat.jpg -> ./lab6_task_2_structured/Images/cat.jpg
+Переміщено: ./lab6_3/img/dog.png -> ./lab6_task_2_structured/Images/dog.png
+Переміщено: ./lab6_3/README.md -> ./lab6_task_2_structured/Documents/README.md
+Створено папку: ./lab6_task_2_structured/Sources
+Переміщено: ./lab6_3/src/main.c -> ./lab6_task_2_structured/Sources/main.c
+Сортування завершено! Див. 'sort_report.log'.
