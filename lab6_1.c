@@ -3,9 +3,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 #define ROOT "lab6_3"
 #define PATH_LEN 1024
+
+typedef struct {
+    int dirs;
+    int files;
+} Counts;
 
 static int make_dir(const char *path)
 {
@@ -67,42 +75,85 @@ static int create_structure(void)
     return 0;
 }
 
-static void print_tree(const char *path, int depth)
+static int cmp_names(const void *a, const void *b)
+{
+    return strcasecmp(*(char *const *)a, *(char *const *)b);
+}
+
+static void print_tree(const char *path, const char *prefix, Counts *counts)
 {
     DIR *dir = opendir(path);
-    struct dirent *entry;
-
     if (dir == NULL) {
         perror(path);
         return;
     }
 
-    while ((entry = readdir(dir)) != NULL) {
-        char full[PATH_LEN];
-        struct stat st;
+    char **names = NULL;
+    size_t n = 0;
+    size_t cap = 0;
+    struct dirent *entry;
 
+    while ((entry = readdir(dir)) != NULL) {
         if (entry->d_name[0] == '.') {
             continue;
         }
 
-        snprintf(full, sizeof(full), "%s/%s", path, entry->d_name);
-        printf("%*s%s\n", depth * 4, "", entry->d_name);
+        if (n == cap) {
+            size_t new_cap = cap ? cap * 2 : 16;
+            char **tmp = realloc(names, new_cap * sizeof(*names));
+            if (tmp == NULL) {
+                perror("realloc");
+                break;
+            }
+            names = tmp;
+            cap = new_cap;
+        }
+
+        names[n] = strdup(entry->d_name);
+        if (names[n] == NULL) {
+            perror("strdup");
+            break;
+        }
+        n++;
+    }
+    closedir(dir);
+
+    qsort(names, n, sizeof(*names), cmp_names);
+
+    for (size_t i = 0; i < n; i++) {
+        int last = (i == n - 1);
+        char full[PATH_LEN];
+        struct stat st;
+
+        snprintf(full, sizeof(full), "%s/%s", path, names[i]);
+        printf("%s%s%s\n", prefix, last ? "└── " : "├── ", names[i]);
 
         if (stat(full, &st) == 0 && S_ISDIR(st.st_mode)) {
-            print_tree(full, depth + 1);
-        }
-    }
+            char next[PATH_LEN];
 
-    closedir(dir);
+            counts->dirs++;
+            snprintf(next, sizeof(next), "%s%s", prefix, last ? "    " : "│   ");
+            print_tree(full, next, counts);
+        } else {
+            counts->files++;
+        }
+
+        free(names[i]);
+    }
+    free(names);
 }
 
 int main(void)
 {
+    Counts counts = {0, 0};
+
     if (create_structure() == -1) {
         return 1;
     }
 
     printf("%s\n", ROOT);
-    print_tree(ROOT, 1);
+    print_tree(ROOT, "", &counts);
+    printf("\n%d directories, %d files\n", counts.dirs, counts.files);
+
     return 0;
 }
